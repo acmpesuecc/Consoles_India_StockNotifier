@@ -4,6 +4,7 @@ from bs4 import BeautifulSoup
 from StockChecker.WebsiteConfig import All_Websites
 from lxml import html
 from StockChecker.Notifications import notify
+from StockChecker.scraperstats import ScraperStats
 
 
 
@@ -376,21 +377,7 @@ class Scrapper:
         return True
 
 
-
-    async def add_count(self, dictionary, product_name, website_name):
-        product_value = dictionary.get(product_name)
-        if product_value is None:
-            dictionary[product_name] = {}
-            dictionary[product_name][website_name] = 1
-        else:
-            count = product_value.get(website_name)
-            if count is None:
-                dictionary[product_name][website_name] = 1
-            else:
-                if dictionary[product_name][website_name] > 10000:
-                    dictionary[product_name][website_name] = 0
-                else:
-                    dictionary[product_name][website_name] += 1
+    scraperStats = ScraperStats()
 
 
 
