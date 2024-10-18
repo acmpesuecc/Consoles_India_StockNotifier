@@ -2,6 +2,7 @@ import random, asyncio, aiohttp, logging
 from StockChecker.ScrapperConfig import All_Products, All_Websites
 from StockChecker.scrapper import ScrapperObj
 from utils.headers import default_headers
+from StockChecker.scrapper import ScraperStats
 
 # from collections import OrderedDict
 import pytz
@@ -23,8 +24,7 @@ logger.addHandler(file_handler)
 
 class RequestsClass:
     def __init__(self):
-        self.count_dict = {}
-        self.error_count_dict = {}
+        pass
 
     async def get_page_html(self, link, headers_list, product_name, website_name):
         headers = random.choice(headers_list or default_headers)
@@ -47,11 +47,7 @@ class RequestsClass:
                         logger.error(
                             f"get_page_html() Error | Product: {product_name} | Website: {website_name} | Status: {response.status} | URL: {link}"
                         )
-                        await ScrapperObj.add_count(
-                            dictionary=self.error_count_dict,
-                            product_name=product_name,
-                            website_name=website_name,
-                        )
+                        ScraperStats.add_scrape(false,product_name,website_name)
                         if response.status in [404]:
                             await asyncio.sleep(60)
                     else:
@@ -59,11 +55,13 @@ class RequestsClass:
                         return html
 
         except asyncio.TimeoutError:
-            await ScrapperObj.add_count(
-                dictionary=self.error_count_dict,
-                product_name=product_name,
-                website_name=website_name,
-            )
+            # await ScrapperObj.add_count(
+            #     dictionary=self.error_count_dict,
+            #     product_name=product_name,
+            #     website_name=website_name,
+            # )
+            ScraperStats.add_scrape(false,product_name,website_name)
+
 
     async def requests_scrapper(
         self, product_name, website_name, scrapper_function, headers_list=None, delay=30
@@ -93,18 +91,10 @@ class RequestsClass:
             if page_html:
                 outcome = await scrapper_function(page_html, product_name)
                 if outcome:
-                    await ScrapperObj.add_count(
-                        dictionary=self.count_dict,
-                        website_name=website_name,
-                        product_name=product_name,
-                    )
+                    ScraperStats.add_scrape(true,product_name,website_name):
 
                 else:
-                    await ScrapperObj.add_count(
-                        dictionary=self.error_count_dict,
-                        product_name=product_name,
-                        website_name=website_name,
-                    )
+                    ScraperStats.add_scrape(false,product_name,website_name):
                     logger.error(f"{website_name} Error: {product_name} ")
 
                 # random_delay = delay + random.randrange(-5,+6)

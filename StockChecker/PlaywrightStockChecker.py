@@ -4,6 +4,7 @@ from StockChecker.WebsiteConfig import All_Websites
 from datetime import datetime
 from playwright.async_api import async_playwright
 from StockChecker.scrapper import ScrapperObj
+from StockChecker.scrapper import ScraperStats
 
 
 # Gets or creates a logger
@@ -55,22 +56,16 @@ class PlaywrightClass:
                 logger.error(
                     f"get_page_html() Error | Product: {product_name} | Website: {website_name} | Status: {response.status} | URL: {link}"
                 )
-                await ScrapperObj.add_count(
-                    dictionary=self.error_count_dict,
-                    product_name=product_name,
-                    website_name=website_name,
-                )
+                
+                ScraperStats.add_scrape(false,product_name,website_name):
                 if response.status == 404:
                     await asyncio.sleep(60)
             else:
                 html = await page.content()
                 return html
         except asyncio.TimeoutError:
-            await ScrapperObj.add_count(
-                dictionary=self.error_count_dict,
-                product_name=product_name,
-                website_name=website_name,
-            )
+            ScraperStats.add_scrape(false,product_name,website_name)
+            
 
     async def playwright_scrapper(
         self, product_name, website_name, scrapper_function, headers_list=None, delay=30
@@ -101,18 +96,10 @@ class PlaywrightClass:
             if page_html:
                 outcome = await scrapper_function(page_html, product_name, page)
                 if outcome:
-                    await ScrapperObj.add_count(
-                        dictionary=self.count_dict,
-                        website_name=website_name,
-                        product_name=product_name,
-                    )
+                    ScraperStats.add_scrape(true,product_name,website_name)
 
                 else:
-                    await ScrapperObj.add_count(
-                        dictionary=self.error_count_dict,
-                        product_name=product_name,
-                        website_name=website_name,
-                    )
+                    ScraperStats.add_scrape(false,product_name,website_name)
                     logger.error(f"{website_name} Error: {product_name} ")
 
                 await asyncio.sleep(delay)
